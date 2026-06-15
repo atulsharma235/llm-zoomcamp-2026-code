@@ -11,31 +11,24 @@ if "openai_client" not in globals():
     openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 ```
 
-
 ```python
 openai_client
 ```
 
-
-
-
     <openai.OpenAI at 0x22ef220c140>
 
-
-
-In this course our running project is to build a bot that can answer queries related to the course. 
+In this course our running project is to build a bot that can answer queries related to the course.
 
 Datatalks-Club runs free ZoomCamps on data engineering, machine learning, MLOps, and other topics. Each course has its own FAQ document with common questions and answers. Many of the questions are common across different FAQ documents, but they might be differently worded, or the responses might be differently structuresd. Also there might be some questions that are very course specific.
 
 We need to build a bot that can ingest all this knowledge and give answers in natural language.
 
 # RAG
+
 * Why we need RAG?
 LLMs are trained on Billions of features, they have the entire knowledge of the internet. Why not just ask a question to LLM and be done with it.
 
-
 Let's build a function that takes our question, serves it to an LLM model ("gpt-5.4-mini" in this case) and returns the response.
-
 
 ```python
 def llm(prompt):
@@ -48,20 +41,13 @@ def llm(prompt):
 
 Let's see how it goes
 
-
 ```python
 llm("Hey Bro, how is life treating you?")
 ```
 
-
-
-
     'Hey bro — pretty good on my side, thanks for asking 😄  \nHow’s life treating you?'
 
-
-
 Now, let's see how it does with course specific questions.
-
 
 ```python
 question = "I just discovered the course. Can I still join?"
@@ -79,15 +65,15 @@ print(f"ResourceWarning: {llm_response}")
     If you’d like, send me the course name or link and I’ll help you check.
     
 
-It's evident that the LLMs would rarely say "I don't know the answer to your question". Here also LLM has given a vague answer. If we ask it about "How to make Biryani?" which is a common knowledge question (Although, making a good Biryani is still very difficult :-), LLMs can fairly answer this question. But they do not know much about LLM-Zoomcamp and they give generic answers. 
+It's evident that the LLMs would rarely say "I don't know the answer to your question". Here also LLM has given a vague answer. If we ask it about "How to make Biryani?" which is a common knowledge question (Although, making a good Biryani is still very difficult :-), LLMs can fairly answer this question. But they do not know much about LLM-Zoomcamp and they give generic answers.
 
 ## Why is that??
+
 This is because the LLM model is trained on the intelligence openly available on the internet. But there is always some cutoff to the training data's recency. For example, the training data for some LLM is fixed to 30th April 2026, and some event happened on 1st may 2026; the LLM would have no clue about that.
 
 ## Adding context manually
 
 Adding context can fix this short-coming of LLMs. LLM zoomcamp website have a lot of FAQs. We get some answers from there and add that to context.
-
 
 ```python
 context = """
@@ -105,6 +91,7 @@ Check the quota and reset cycle carefully. Potential options include Google Cola
 """
 ```
 
+Now, let's build the prompt that we will pass to the LLM.
 
 ```python
 prompt = f"""
@@ -123,7 +110,6 @@ Context:
 """
 ```
 
-
 ```python
 answer = llm(prompt)
 print(answer)
@@ -133,23 +119,24 @@ print(answer)
     
 
 ## RAG
+
 RAG stands for *R*etrival *A*ugmented *G*eneration. We retrieve (search) relevant information from documents in our Knowledge base and then augment LLM to generate a response. That search step is what gives the LLM the context it needs to answer correctly.
 So, what's happening here is the *Retrival of Information and Generation*.
-
 
 That's the entire architecture. It comes down to three components.
 
 The pieces are search, the prompt, and the LLM:
 
-- search
-- prompt
-- LLM
+* search
+* prompt
+* LLM
+
 ```mermaid
 flowchart TD
     U([User])
     APP[Application]
     DB[(DB)]
-    DOCS[[D1 ... D5]]
+    DOCS[[D1...D5]]
     PROMPT[Build Prompt<br/>Question + Context]
     LLM[LLM]
     ANSWER([Answer])
@@ -163,4 +150,5 @@ flowchart TD
     LLM --> ANSWER
     ANSWER --> U
 ```
+
 The LLM only see the data we provide to it; so it's answers are grounded to our data. If right data is retrieved, our answers will be better. if wrong data is retrieved, our answers will not be accurate. Our model is only as good as our retrieval. So search quality matters a lot for RAG.
